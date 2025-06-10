@@ -1,3 +1,5 @@
+# main.py for the AI agent
+
 import os
 import sys
 from dotenv import load_dotenv

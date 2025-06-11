@@ -9,10 +9,12 @@ def get_files_info(working_directory, directory=None):
     if not os.path.isdir(path):
         return f'Error: "{directory}" is not a directory.'
     
-    dirlist = os.listdir(path=path)
-    output = ""
-    for entry in dirlist:
-        fullpath = os.path.join(path, entry)
-        output += f'- {entry}: file_size={os.path.getsize(fullpath)} bytes, is_dir={os.path.isdir(fullpath)}\n'
-
-    return output
+    try:
+        dirlist = os.listdir(path=path)
+        output = ""
+        for entry in dirlist:
+            fullpath = os.path.join(path, entry)
+            output += f'- {entry}: file_size={os.path.getsize(fullpath)} bytes, is_dir={os.path.isdir(fullpath)}\n'
+            return output
+    except Exception as e:
+        return f'Error: {e}'

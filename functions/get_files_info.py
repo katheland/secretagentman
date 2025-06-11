@@ -1,3 +1,5 @@
+# get_files_info
+
 import os
 
 def get_files_info(working_directory, directory=None):
@@ -15,6 +17,6 @@ def get_files_info(working_directory, directory=None):
         for entry in dirlist:
             fullpath = os.path.join(path, entry)
             output += f'- {entry}: file_size={os.path.getsize(fullpath)} bytes, is_dir={os.path.isdir(fullpath)}\n'
-            return output
+        return output
     except Exception as e:
         return f'Error: {e}'

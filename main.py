@@ -46,29 +46,43 @@ messages = [types.Content(
     parts=[types.Part(text=request)]
 )]
 
-response = client.models.generate_content(
-    model="gemini-2.0-flash-001",
-    contents=messages,
-    config=types.GenerateContentConfig(
-        tools=[available_functions],
-        system_instruction=system_prompt
-    )
-)
+MAX_ITERATIONS = 20
 
 if verbose:
     print("User prompt: " + request)
-if len(response.function_calls) > 0:
-    for call in response.function_calls:
-        result = call_function(call, verbose)
-        if hasattr(result.parts[0], "function_response") and hasattr(result.parts[0].function_response, "response"):
-            if verbose:
-                print(f"-> {result.parts[0].function_response.response}")
+
+for i in range(MAX_ITERATIONS):
+    function_called = False
+    
+    response = client.models.generate_content(
+        model="gemini-2.0-flash-001",
+        contents=messages,
+        config=types.GenerateContentConfig(
+            tools=[available_functions],
+            system_instruction=system_prompt
+        )
+    )
+
+    if response.candidates is not None:
+        for candidate in response.candidates:
+            messages.append(candidate.content)
+
+    if response.function_calls is not None:
+        function_called = True
+        for call in response.function_calls:
+            result = call_function(call, verbose)
+            if hasattr(result.parts[0], "function_response") and hasattr(result.parts[0].function_response, "response"):
+                messages.append(result)
+                if verbose:
+                    print(f"-> {result.parts[0].function_response.response}")
+                else:
+                    print(f"{result.parts[0].function_response.response["result"]}")
             else:
-                print(f"{result.parts[0].function_response.response["result"]}")
-        else:
-            raise Exception("The response doesn't have a response.  It should have a response.")
-else:
-    print(response.text)
-if verbose:
-    print("Prompt tokens: " + str(response.usage_metadata.prompt_token_count))
-    print("Response tokens: " + str(response.usage_metadata.candidates_token_count))
+                raise Exception("The response doesn't have a response.  It should have a response.")
+    if verbose:
+        print("Prompt tokens: " + str(response.usage_metadata.prompt_token_count))
+        print("Response tokens: " + str(response.usage_metadata.candidates_token_count))
+
+    if not function_called:
+        print(response.text)
+        break
